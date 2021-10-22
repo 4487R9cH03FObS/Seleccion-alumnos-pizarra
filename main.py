@@ -14,17 +14,7 @@ class StudentPicker:
         self.students            = student_answers.keys()
         self.question_names      = question_names
         self.profesor_name       = profesor_name
-    
-    def random_partitioner(self,partitions: int):
-        student_list = list(self.students)
-        random.shuffle(student_list)
 
-        Partitions = [[] for _i in range(partitions)]
-        for i,student in enumerate(student_list):
-            p = int(i%partitions)
-            Partitions[p].append(student)
-        return Partitions
-    
     @staticmethod
     def partition_list(student_list:list, partitions: int):
         Partitions = [[] for _i in range(partitions)]
@@ -32,42 +22,14 @@ class StudentPicker:
             p = int(i%partitions)
             Partitions[p].append(student)
         return Partitions
-    
-    def total_score_queue(self):
-        _queue = PriorityQueue(maxsize=len(self.students)+1)
-        scores = np.array(self.questions_scores)
-        for student,questions in self.students_questions.items():
-            solveds = np.array(questions)
-            score = np.dot(solveds,scores)
-            _queue.put((-score,student))
-        return _queue
-    
-    def total_score_sorted_list(self):
-        _queue = self.total_score_queue()
-        _list = []
-        while not _queue.empty():
-            _list.append(_queue.get()[1])
-        return _list
 
-    def total_score_list(self):
-        _queue = self.total_score_queue()
-        _list = []
-        while not _queue.empty():
-            obj = _queue.get()
-            _list.append((obj[1],-obj[0]))
-        return _list
-
-    def scored_partitioner(self,partitions: int):
-        student_list = self.total_score_sorted_list()
-        return student_picker.partition_list(student_list,partitions)
-    
-    def shuffled_scored_partitioner(self,partitions : int, shufflers_step:int):
+    def shuffled_scored_partitioner(self,partitions : int, shuffler_sizes:int):
         _list = self.total_score_sorted_list()
         # shuffler
         shuffler = []
         for i,student in enumerate(_list):
-            # create another shuffler every 'shuffler_step' steps
-            if i%shufflers_step==0:
+            # create another shuffler every 'shuffler_sizes' steps
+            if i%shuffler_sizes==0:
                 shuffler.append([])
             shuffler[-1].append(student) # add current student to the shuffler
         
@@ -75,19 +37,8 @@ class StudentPicker:
             random.shuffle(sub_list)
 
         student_list = [student for sub_list in shuffler for student in sub_list]
-        return student_picker.partition_list(student_list,partitions)
-    
-    def partition_solved_counts(self,partition):
-        solved_counts = []
-        num_questions = len(self.questions_scores)
-        for part_number, part in enumerate(partition):
-            question_counts = np.zeros(num_questions)
-            for student in part:
-                student_solved = np.array(self.students_questions[student])
-                question_counts+=student_solved
-            solved_counts.append(question_counts)
-        return solved_counts
-    
+        return StudentPicker.partition_list(student_list,partitions)
+
     def question_assignment(self,partition,coin_toss_weight:Callable=(lambda x:x**1.5),tries:int=100):
         assignments = []
         solved_counts = self.partition_solved_counts(partition)
@@ -136,8 +87,11 @@ class StudentPicker:
                     student=student_id
                 #end
                 part_assignment[question_name] = student if student!=None else self.profesor_name 
+
+                #add weight proportional to question difficulty (based on score)
+                question_weight = questions_scores[self.question_names.index(question_name)]
                 if student!=None:
-                    student_weight[student]+=1
+                    student_weight[student]+=question_weight
             # assign unsolveds
             for i in unsolveds:
                 name = self.question_names[i]
@@ -146,6 +100,58 @@ class StudentPicker:
             _tuple = (partition,assignments)
         return _tuple
     
+    # cosas útiles y experimentos
+
+    def scored_partitioner(self,partitions: int):
+        student_list = self.total_score_sorted_list()
+        return StudentPicker.partition_list(student_list,partitions)
+    
+    def random_partitioner(self,partitions: int):
+        student_list = list(self.students)
+        random.shuffle(student_list)
+
+        Partitions = [[] for _i in range(partitions)]
+        for i,student in enumerate(student_list):
+            p = int(i%partitions)
+            Partitions[p].append(student)
+        return Partitions
+    
+    def total_score_queue(self):
+        _queue = PriorityQueue(maxsize=len(self.students)+1)
+        scores = np.array(self.questions_scores)
+        for student,questions in self.students_questions.items():
+            solveds = np.array(questions)
+            score = np.dot(solveds,scores)
+            _queue.put((-score,student))
+        return _queue
+    
+    def total_score_sorted_list(self):
+        _queue = self.total_score_queue()
+        _list = []
+        while not _queue.empty():
+            _list.append(_queue.get()[1])
+        return _list
+
+    def total_score_list(self):
+        _queue = self.total_score_queue()
+        _list = []
+        while not _queue.empty():
+            obj = _queue.get()
+            _list.append((obj[1],-obj[0]))
+        return _list
+    
+    # Para extraer información de las particiones/asignaciones
+
+    def partition_solved_counts(self,partition):
+        solved_counts = []
+        num_questions = len(self.questions_scores)
+        for part_number, part in enumerate(partition):
+            question_counts = np.zeros(num_questions)
+            for student in part:
+                student_solved = np.array(self.students_questions[student])
+                question_counts+=student_solved
+            solved_counts.append(question_counts)
+        return solved_counts
 
     def unsolved_from_partition(self,partition):
         counts = self.partition_solved_counts(partition)
@@ -163,6 +169,8 @@ class StudentPicker:
                     "solved counts"     : questions_solveds,
                 })
         return bad_partitions
+    
+    # para hacer reportes
     
     def partition_report(self,partition):
         print("----  Partition Report  ----")
@@ -222,8 +230,10 @@ class StudentPicker:
         grade = 1 + 6.0*(student_scores/maximum_attainable_score)
         return grade
 
+###############################    MAIN    ###############################
+
 if __name__=="__main__":
-    np.random.seed() # randomness
+    np.random.seed() # Randomness
 
     questions_scores = [1,2,2,1,1]
     questions_names  = ["P1a","P1b","P2","P3a","P3b"]
@@ -248,10 +258,18 @@ if __name__=="__main__":
 
     picker     = StudentPicker(questions_scores,students_answers,questions_names)
 
-    groups    = 2
-    shufflers = 3 #sub arrays
+    # shuffled_score_partitioner:
+    # 1. Sorts students by their total score, (better grades at the top)
+    # 2. Shuffles students in groups of "shuffler_size" in the sorted list, so they stay near their place but not exactly.
+    # 3. Goes through the shuffled list sending students to group 1,2,... up to group "number_of_groups".
 
-    partition  = picker.shuffled_scored_partitioner(2,3)
+    number_of_groups  = 2
+    shuffler_size     = 3  
+
+    # question_assignment:
+    # this one is a bit more tricky to explain. TODO.
+
+    partition  = picker.shuffled_scored_partitioner(number_of_groups,shuffler_size)
     assignment = picker.question_assignment(partition)
 
     picker.question_count_report()
