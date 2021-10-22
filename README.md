@@ -38,7 +38,7 @@ Actualmente, ejecutar el script usa estos parámetros:
 
 **TODO**: Programar una clase para que absorba una tabla de google forms.
 #### ideas:
-  - Podría darse acceso a una sesión de google con tokens y usar las librerías `ezsheets, google-api-python-client, google-auth-httplib2, google-auth-oauthlib`
+  - Podría darse acceso a una sesión de google con tokens y usar las librerías `ezsheets`, `google-api-python-client`, `google-auth-httplib2` y `google-auth-oauthlib`
   - Alternativamente, podría programarse para que consuma una tabla en `.csv`.
   - Idealmente, la tabla debería:
       - tener los nombres de la preguntas en los encabezados.
