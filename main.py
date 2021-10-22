@@ -60,8 +60,8 @@ class StudentPicker:
                 question_name = self.question_names[i]
                 student_candidates = [student for student,questions in self.students_questions.items() if questions[i]>0 and student in part]
                 # pick student, with probability decreasing
-                # with respect to "charge", the amount of times
-                # the student has solved the problem in the board.
+                # with respect to "student weight", the amount of times
+                # the student has solved the problem in the board, multiplied by the score of that question.
                 student = None
                 weight  = weight_sum(student_weight) 
                 # try some candidates at random
@@ -240,7 +240,7 @@ if __name__=="__main__":
     # p1a : 1
     # p1b : 2
     # p2  : 2
-    # p3a : 2
+    # p3a : 1
     # p3b : 1
 
     students_answers = {               #hot encoding
