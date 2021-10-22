@@ -4,19 +4,14 @@ import random
 from typing import Callable
 from queue import PriorityQueue
 
-# DATA
-## Table 1
-# T1: Questions -> Score
-## Table 2
-# T2: Students -> {0,1}^Questions (hot encoding)
-
+from numpy.core.fromnumeric import argmax
 
 class student_picker:
-    def __init__(self,table_1,table_2:dict,question_names:list,profesor_name="Auxiliar"):
-        self.questions_scores    = np.array(table_1)
+    def __init__(self,question_scores,student_answers:dict,question_names:list,profesor_name="Auxiliar"):
+        self.questions_scores    = np.array(question_scores)
         self.num_questions       = len(self.questions_scores)
-        self.students_questions  = table_2
-        self.students            = table_2.keys()
+        self.students_questions  = student_answers
+        self.students            = student_answers.keys()
         self.question_names      = question_names
         self.profesor_name       = profesor_name
     
@@ -71,10 +66,10 @@ class student_picker:
         # shuffler
         shuffler = []
         for i,student in enumerate(_list):
-            # create another shuffler
+            # create another shuffler every 'shuffler_step' steps
             if i%shufflers_step==0:
                 shuffler.append([])
-            shuffler[-1].append(student)
+            shuffler[-1].append(student) # add current student to the shuffler
         
         for sub_list in shuffler:
             random.shuffle(sub_list)
@@ -93,7 +88,7 @@ class student_picker:
             solved_counts.append(question_counts)
         return solved_counts
     
-    def question_assignment(self,partition,coin_toss_weight:Callable=(lambda x:x**1.5),tries:int=1000):
+    def question_assignment(self,partition,coin_toss_weight:Callable=(lambda x:x**1.5),tries:int=100):
         assignments = []
         solved_counts = self.partition_solved_counts(partition)
         for part_number, part in enumerate(partition):
@@ -106,8 +101,8 @@ class student_picker:
             for i in solveds:
                 assignment_priority.put((part_solved_counts[i],i))
             
-            student_charge = dict([(student,0.0) for student in part])
-            charge_sum     = lambda st_charge : float(sum([c for c in st_charge.values()]))
+            student_weight = dict([(student,0.0) for student in part])
+            weight_sum     = lambda st_charge : float(sum([c for c in st_charge.values()]))
 
             while(not assignment_priority.empty()):
                 i = assignment_priority.get()[1]
@@ -117,25 +112,32 @@ class student_picker:
                 # with respect to "charge", the amount of times
                 # the student has solved the problem in the board.
                 student = None
-                charge  = charge_sum(student_charge) 
-                counter = 0
-                while student==None and counter<tries:
+                weight  = weight_sum(student_weight) 
+                # try some candidates at random
+                for _try in range(tries):
+                    # choose if candidate has not been to the board
                     candidate = random.choice(student_candidates)
-                    candidate_charge = float(student_charge[candidate])
-                    if candidate_charge==0:
+                    if float(student_weight[candidate])==0:
                         student=candidate
-                        continue
-                    relative_charge  = candidate_charge/charge
-                    coin_toss = coin_toss_weight(relative_charge)
-                    coin_toss_trial = np.random.random()
-
-                    if coin_toss_trial < coin_toss:
-                        student=candidate
-                    counter+=1
-                # end while.
-                part_assignment[question_name] = student if student!=None else self.profesor_name
+                        break
+                # if that fails, estimate best fit via numerous tries
+                if student==None:
+                    number_of_candidates = len(student_candidates)
+                    coin_counter = np.zeros(number_of_candidates)
+                    for _try in range(tries):
+                        randint   = random.randint(0,number_of_candidates-1)
+                        candidate = student_candidates[randint]
+                        candidate_weight = float(student_weight[candidate])
+                        relative_weight  = candidate_weight/weight
+                        coin_toss = coin_toss_weight(relative_weight)
+                        coin_toss_trial = np.random.random()
+                        coin_counter[randint]+=1.0*(coin_toss_trial<coin_toss)
+                    student_id = np.argmax(coin_counter)
+                    student=student_id
+                #end
+                part_assignment[question_name] = student if student!=None else self.profesor_name 
                 if student!=None:
-                    student_charge[student]+=1
+                    student_weight[student]+=1
             # assign unsolveds
             for i in unsolveds:
                 name = self.question_names[i]
@@ -163,19 +165,21 @@ class student_picker:
         return bad_partitions
     
     def partition_report(self,partition):
-        print("----  partition report  ----")
+        print("----  Partition Report  ----")
         bad_partitions = self.unsolved_from_partition(partition)
         if len(bad_partitions)!=0:
             print("There are partitions with unsolved questions!")
+            print("Note: in this case, unsolved questions are assigned to {profesor} by default.".format(profesor=self.profesor_name))
             for each in bad_partitions:
                 print("part number          : ",each["part number"])
                 print("part                 : ",each["part"])
                 print("unsolved questions   : ",each["not solveds names"])
         else:
             print("Every partition solved all of its questions!")
+        print()
         
     def question_count_report(self):
-        print("---- question report ----")
+        print("---- Question Report ----")
         question_counts = np.zeros(self.num_questions)
         for _student,solved in self.students_questions.items():
             student_solved  =  np.array(solved)
@@ -187,25 +191,28 @@ class student_picker:
         print("-- Question counts")
         for count,name in sorted_count:
             print("{:<5} : {:<3}".format(name,count))
+        print()
         
         print("-- Students by score")
         for student, score in self.total_score_list():
             _grade = self.grade(student)
-            print("{:<20} : {:<7}, grade: {:.1f}".format(student,score,_grade))
+            print("{:<20} : {:<7} grade: {:.1f}".format(student,score,_grade))
+        print()
 
-    def report_assignments(self,assignment_tuple):
+    def assignments_report(self,assignment_tuple):
         print("---- Problem Assignation ----")
         partition   = assignment_tuple[0]
         assign_list = assignment_tuple[1]
-        for n,assign in enumerate(assign_list):
-            students = partition[n]
-            print("For the students in group ",n)
+        for group,assign in enumerate(assign_list):
+            students = partition[group]
+            print("For the students in group {:>2}".format(group))
             print(students)
-            print("The Problems are:")
+            print("The problems are:")
             for question_name in self.question_names:
                 person = assign[question_name]
                 print("{:<4} : {:>20}".format(question_name,person))
-            #for quest,person in assign.items():
+            print()
+        print()
     
     def grade(self,student):
         scores    = self.questions_scores
@@ -226,7 +233,7 @@ if __name__=="__main__":
     # p3a : 2
     # p3b : 1
 
-    students_questions = {
+    students_answers = {               #hot encoding
         "pedro"       :[1,1,1,1,0],
         "juan"        :[0,1,1,1,0], 
         "diego"       :[0,0,1,1,0],
@@ -239,16 +246,16 @@ if __name__=="__main__":
         "maya"        :[1,1,1,1,0],
     }
 
-    picker     = student_picker(questions_scores,students_questions,questions_names)
-    partition  = picker.shuffled_scored_partitioner(2,2)
+    picker     = student_picker(questions_scores,students_answers,questions_names)
+
+    groups    = 2
+    shufflers = 3 #sub arrays
+
+    partition  = picker.shuffled_scored_partitioner(2,3)
     assignment = picker.question_assignment(partition)
 
-    picker.partition_report(partition)
     picker.question_count_report()
-    picker.report_assignments(assignment)
-    
-
-    
-
+    picker.partition_report(partition)
+    picker.assignments_report(assignment)
 
 
