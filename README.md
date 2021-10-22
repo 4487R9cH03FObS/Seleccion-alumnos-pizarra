@@ -1,12 +1,15 @@
 # Seleccion-alumnos-pizarra
 
-Herramienta para seleccionar alumnos a salir a la pizarra de forma aleatoria
-Está motivada por un curso en que cada alumno declara que hizo ciertas preguntas entre varias, y comúnmente asumimos que la hizo, sin embargo, el día de la evaluación, puede ser llamado a la pizarra a mostrar su resolución en caso de haberla declarado como hecha.
+Herramienta para seleccionar alumnos a salir a la pizarra de forma aleatoria.
+Está motivada por un curso en que cada estudiante declara que hizo ciertas preguntas entre un set de varias... y comúnmente se asume que la hizo, sin embargo, el día de la evaluación, puede ser llevado/a a la pizarra a mostrar su resolución en caso de haberla declarado como hecha.
+Esta herramienta apunta a ser un ejercicio de programación, pero también podría servir para facilitar la partición de estudiantes en varios grupos y también la selección aleatorizada para hacer su pregunta.
 
 La implementación se encuentra hecha en una clase `StudentPicker`.
 Al ejecutar el script, debería procesarse la entrada y generar un reporte con los resultados.
+La herramienta tiene más de un método para particionar y asignar problemas. Los dos métodos mejor desarrollados son
+`shuffled_scored_partitioner` y `question_assignment`, para particionar el conjunto de estudiantes y para asignar una pregunta a cada estudiante de una partición.
 
-Actualmente usa estos parámetros:
+Actualmente, ejecutar el script usa estos parámetros:
 ```
     questions_scores = [1,2,2,1,1]
     questions_names  = ["P1a","P1b","P2","P3a","P3b"]
