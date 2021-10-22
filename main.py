@@ -6,7 +6,7 @@ from queue import PriorityQueue
 
 from numpy.core.fromnumeric import argmax
 
-class student_picker:
+class StudentPicker:
     def __init__(self,question_scores,student_answers:dict,question_names:list,profesor_name="Auxiliar"):
         self.questions_scores    = np.array(question_scores)
         self.num_questions       = len(self.questions_scores)
@@ -246,7 +246,7 @@ if __name__=="__main__":
         "maya"        :[1,1,1,1,0],
     }
 
-    picker     = student_picker(questions_scores,students_answers,questions_names)
+    picker     = StudentPicker(questions_scores,students_answers,questions_names)
 
     groups    = 2
     shufflers = 3 #sub arrays
