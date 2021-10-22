@@ -1,7 +1,9 @@
 # Seleccion-alumnos-pizarra
 
-Herramienta para seleccionar alumnos a salir a la pizarra de forma aleatoria.
-La implementación se encuentra hecha en una clase `student_picker`.
+Herramienta para seleccionar alumnos a salir a la pizarra de forma aleatoria
+Está motivada por un curso en que cada alumno declara que hizo ciertas preguntas entre varias, y comúnmente asumimos que la hizo, sin embargo, el día de la evaluación, puede ser llamado a la pizarra a mostrar su resolución en caso de haberla declarado como hecha.
+
+La implementación se encuentra hecha en una clase `StudentPicker`.
 Al ejecutar el script, debería procesarse la entrada y generar un reporte con los resultados.
 
 Actualmente usa estos parámetros:
@@ -26,6 +28,7 @@ Actualmente usa estos parámetros:
         "natacha"     :[1,1,1,1,0],
         "maya"        :[1,1,1,1,0],
     }
+    
 ```
 
 
