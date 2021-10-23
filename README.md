@@ -16,7 +16,7 @@ Actualmente, ejecutar el script usa estos parámetros:
     # p1a : 1
     # p1b : 2
     # p2  : 2
-    # p3a : 2
+    # p3a : 1
     # p3b : 1
 
     students_answers = {               #hot encoding
