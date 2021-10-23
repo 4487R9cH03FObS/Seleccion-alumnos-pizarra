@@ -1,7 +1,7 @@
 # Seleccion-alumnos-pizarra
 
 Herramienta para seleccionar alumnos a salir a la pizarra de forma aleatoria.
-Está motivada por un curso en que cada estudiante declara que hizo ciertas preguntas entre un set de varias... y comúnmente se asume que la hizo, sin embargo, el día de la evaluación, puede ser llevado/a a la pizarra a mostrar su resolución en caso de haberla declarado como hecha.
+Está motivada por un curso en que para cada tarea, cada estudiante declara que hizo ciertas preguntas entre un set de varias... y comúnmente se asume que la hizo, sin embargo, el día de la evaluación, puede ser llevado/a a la pizarra a mostrar su resolución en caso de haberla declarado como hecha.
 Esta herramienta apunta a ser un ejercicio de programación, pero también podría servir para facilitar la partición de estudiantes en varios grupos y también la selección aleatorizada para hacer su pregunta.
 
 La implementación se encuentra hecha en una clase `StudentPicker`.
