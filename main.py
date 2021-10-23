@@ -227,10 +227,11 @@ class StudentPicker:
     # para hacer reportes
     
     def partition_report(self,partition):
+        print()
         print("----  Partition Report  ----")
         bad_partitions = self.unsolved_from_partition(partition)
         if len(bad_partitions)!=0:
-            print("There are partitions with unsolved questions!")
+            print("Warning: There are partitions with unsolved questions!")
             print("Note: in this case, unsolved questions are assigned to {profesor} by default.".format(profesor=self.profesor_name))
             for each in bad_partitions:
                 print("part number          : ",each["part number"])
@@ -239,9 +240,20 @@ class StudentPicker:
         else:
             print("Every partition solved all of its questions!")
         print()
-        
+        print("-- Grades in each group")
+        for g,group in enumerate(partition):
+            grade_list   = [self.grade(student) for student in group]
+            average      = np.average(grade_list)
+            median       = np.median(grade_list)
+            standard_dev = np.std(grade_list)
+            _max         = np.max(grade_list)
+            _min         = np.min(grade_list)
+            response = "Group {g:>2} -> mean: {ave:.1f} median: {med:.1f} std: {std:.1f}  |  min,max : {_min:.1f}-{_max:.1f}".format(g=g,ave=average,med=median,std=standard_dev,_min=_min,_max=_max)
+            print(response)
+        print()
         
     def question_count_report(self):
+        print()
         print("---- Question Report ----")
         question_counts = np.zeros(self.num_questions)
         for _student,solved in self.students_answers.items():
@@ -263,6 +275,7 @@ class StudentPicker:
         print()
 
     def assignment_report(self,assignment,vertical=False):
+        print()
         print("---- Problem Assignation ----")
         for group_assignment in assignment:
             group                 = group_assignment[0]
@@ -356,7 +369,7 @@ if __name__=="__main__":
 
     # Reports the number of problem solved counts by the students, and the grades of the students.
     picker.question_count_report()
-    # Reports if there are groups with unsolved problems. TODO report the average grade of each group.
+    # Reports if there are groups with unsolved problems and group grade statistics.
     picker.partition_report(partition)
     # Reports assignment of problems to each group.
     picker.assignment_report(assignment)
